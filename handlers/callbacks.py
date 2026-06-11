@@ -151,10 +151,22 @@ async def cb_staff_restart(callback: CallbackQuery) -> None:
     if not is_admin(callback.from_user.id):
         await callback.answer("Нет доступа", show_alert=True)
         return
-    await callback.message.edit_text(
-        "🔄 Перезапускаю бота...\n\n<i>Он включится сам через 5 секунд благодаря start.bat</i>"
-    )
     await callback.answer()
+    import asyncio
+    for i in range(5, 0, -1):
+        try:
+            await callback.message.edit_text(
+                f"🔄 Перезапускаю бота...\n\n<i>Остановка процесса через {i} сек...</i>"
+            )
+        except Exception:
+            pass
+        await asyncio.sleep(1)
+        
+    try:
+        await callback.message.edit_text("💤 Бот остановлен. Сервер (start.bat) запустит его заново!")
+    except Exception:
+        pass
+        
     import os
     os._exit(0)
 
