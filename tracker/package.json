@@ -1,0 +1,15 @@
+{
+  "name": "revealbot-tracker",
+  "version": "1.0.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "start": "node src/main.js",
+    "postinstall": "npx camoufox-js fetch"
+  },
+  "dependencies": {
+    "crawlee": "^3.12.0",
+    "camoufox-js": "^0.4.0",
+    "playwright": "1.49.1"
+  }
+}
