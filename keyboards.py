@@ -58,7 +58,7 @@ def main_menu_inline() -> InlineKeyboardMarkup:
     b.button(text="📰 Новости", callback_data="nav:news")
     b.button(text="📢 Уведомления", callback_data="nav:notify")
     b.button(text="⚙️ Настройки", callback_data="nav:settings")
-    b.adjust(1, 2, 2, 2, 2, 1)
+    b.adjust(1, 1, 2, 2, 2, 2)
     return b.as_markup()
 
 
