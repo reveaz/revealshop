@@ -154,7 +154,7 @@ async def format_rate_message() -> str:
     forte_text = (
         "💱 <b>Курс (настроен вручную)</b>\n"
         f"   🇨🇳 <b>CNY</b> ~ {config.CNY_RATE:.4f} ₽\n"
-        f"   🇺🇸 <b>USD</b> ~ {config.USD_RATE:.4f} ₽\n\n"
+        f"   🇰🇿 <b>KZT</b> ~ {config.KZT_PER_RUB:.2f} ₸ за 1 ₽\n\n"
     )
 
     return screen(
