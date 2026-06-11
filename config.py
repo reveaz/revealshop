@@ -45,6 +45,7 @@ ROBOKASSA_HASH_ALGO = os.getenv("ROBOKASSA_HASH_ALGO", "md5")   # md5 | sha256
 ROBOKASSA_SNO = os.getenv("ROBOKASSA_SNO", "usn_income")        # система налогообложения
 WEBHOOK_HOST = os.getenv("WEBHOOK_HOST", "")
 WEBHOOK_PORT = int(os.getenv("WEBHOOK_PORT", "8080"))
+WEBAPP_URL = os.getenv("WEBAPP_URL", f"{WEBHOOK_HOST}/app/index.html")
 
 # Banners
 BANNER_MENU = _ROOT / "assets" / "banner_menu.png"

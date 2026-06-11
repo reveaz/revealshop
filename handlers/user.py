@@ -145,6 +145,89 @@ async def cmd_cancel(message: Message, state: FSMContext) -> None:
     await send_home(message, state)
 
 
+@router.message(F.web_app_data)
+async def handle_webapp_data(message: Message, state: FSMContext) -> None:
+    data_str = message.web_app_data.data
+    import json
+    try:
+        payload = json.loads(data_str)
+    except Exception:
+        return
+
+    if payload.get("type") == "cart":
+        items = payload.get("items", [])
+        if not items:
+            return
+
+        total_rub = 0.0
+        receipt_items = []
+        cargo_names = []
+
+        from services.robokassa import ReceiptItem, robokassa_payment_url
+
+        for item in items:
+            name = item.get("name", "Товар")
+            price = float(item.get("price", 0))
+            qty = int(item.get("quantity", 1))
+            
+            line_sum = price * qty
+            total_rub += line_sum
+            
+            receipt_items.append(ReceiptItem(name=name, quantity=qty, sum=line_sum))
+            cargo_names.append(f"{name} (x{qty})")
+
+        cargo_type = ", ".join(cargo_names)[:100]
+
+        # Создаем заказ в базе со статусом Ожидает оплаты
+        order_id = await db.create_order(
+            user_id=message.from_user.id,
+            cargo_type=cargo_type,
+            weight=0.0,
+            cost_cny=0.0, # Цены уже финальные в рублях
+            city="—",     # Упрощенный чекаут
+            status="Ожидает оплаты"
+        )
+
+        invoice = robokassa_payment_url(
+            inv_id=order_id,
+            out_sum=total_rub,
+            description=f"Заказ #{order_id} (Каталог) — RevealLorder",
+            items=receipt_items,
+        )
+
+        if invoice:
+            await db.record_payment(
+                payment_id=str(order_id),
+                order_id=order_id,
+                amount=total_rub,
+                currency="RUB",
+            )
+            
+            # Notify admins
+            await notify_admins_new_order(
+                message.bot, order_id, message.from_user,
+                cargo_type, 0.0, "—", 0.0
+            )
+
+            from aiogram.types import InlineKeyboardMarkup, InlineKeyboardButton
+            pay_kb = InlineKeyboardMarkup(inline_keyboard=[
+                [InlineKeyboardButton(text="💳 Оплатить (Robokassa)", url=invoice)],
+                [InlineKeyboardButton(text="🏠 Меню", callback_data="nav:home")]
+            ])
+
+            from texts import screen
+            # Keep chat clean, delete webapp message
+            try:
+                await message.delete()
+            except Exception:
+                pass
+                
+            await message.answer(
+                screen(f"Заказ #{order_id}", f"Сумма к оплате: <b>{total_rub:,.2f} ₽</b>"),
+                reply_markup=pay_kb
+            )
+
+
 # ── Order form: Step 1 — Cargo type ──
 
 @router.message(OrderForm.cargo_type)

@@ -3,6 +3,7 @@ from aiogram.types import (
     InlineKeyboardMarkup,
     KeyboardButton,
     ReplyKeyboardMarkup,
+    WebAppInfo,
 )
 from aiogram.utils.keyboard import InlineKeyboardBuilder, ReplyKeyboardBuilder
 
@@ -47,7 +48,7 @@ def nav_footer_inline(back_data: str = "staff:panel") -> InlineKeyboardMarkup:
 
 def main_menu_inline() -> InlineKeyboardMarkup:
     b = InlineKeyboardBuilder()
-    b.button(text="🔥 Каталог хитов", callback_data="nav:catalog")
+    b.button(text="🔥 Каталог хитов", web_app=WebAppInfo(url=config.WEBAPP_URL))
     b.button(text="🔗 Выкуп по ссылке (Pro)", callback_data="nav:order")
     b.button(text="📋 Мои заказы", callback_data="nav:orders")
     b.button(text="🧮 Калькулятор", callback_data="nav:calc")

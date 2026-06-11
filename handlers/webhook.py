@@ -112,4 +112,10 @@ def create_webhook_app() -> web.Application:
     app = web.Application()
     app.router.add_post("/webhook/robokassa", handle_robokassa_result)
     app.router.add_get("/webhook/robokassa", handle_robokassa_result)
+    
+    import pathlib
+    import config
+    webapp_dir = config._ROOT / "webapp"
+    app.router.add_static("/app/", path=str(webapp_dir), name="webapp")
+    
     return app
