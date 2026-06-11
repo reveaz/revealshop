@@ -76,14 +76,18 @@ def build_calculation(
     # Add 3% to original cost in CNY as requested
     cost_cny_with_fee = cost_cny * 1.03
 
-    goods_rub = round(cost_cny_with_fee * cny, 2)
-    pct = commission_percent(cost_cny_with_fee, threshold)
-    commission_rub = round(goods_rub * pct / 100, 2)
+    # Округляем в пользу мерчанта (ceil)
+    goods_rub = math.ceil(cost_cny_with_fee * cny)
+    
+    # Порог комиссии проверяем по ИСХОДНОЙ сумме до наценки 3%
+    pct = commission_percent(cost_cny, threshold)
+    commission_rub = math.ceil(goods_rub * pct / 100)
+    
     del_usd = delivery_usd(effective_weight, min_kg, usd_per_kg)
-    delivery_rub = round(del_usd * usd, 2)
+    delivery_rub = math.ceil(del_usd * usd)
 
     # Итог: товар + комиссия + логистика + сбор
-    subtotal_rub = math.ceil(goods_rub + commission_rub + delivery_rub + tech_fee)
+    subtotal_rub = goods_rub + commission_rub + delivery_rub + math.ceil(tech_fee)
 
     # Вычитаем скидку (баланс пользователя), не уходя в минус
     applied_discount = min(discount, subtotal_rub) if discount > 0 else 0.0
@@ -92,15 +96,15 @@ def build_calculation(
     return {
         "cny_rate": cny,
         "usd_rate": usd,
-        "goods_rub": goods_rub,
+        "goods_rub": float(goods_rub),
         "commission_pct": pct,
-        "commission_rub": commission_rub,
+        "commission_rub": float(commission_rub),
         "delivery_usd": del_usd,
-        "delivery_rub": delivery_rub,
+        "delivery_rub": float(delivery_rub),
         "estimated_weight": effective_weight,
-        "subtotal_rub": subtotal_rub,
-        "discount_applied": applied_discount,
-        "total_rub": total_rub,
+        "subtotal_rub": float(subtotal_rub),
+        "discount_applied": float(applied_discount),
+        "total_rub": float(total_rub),
         "total_kzt": math.ceil(total_rub * kzt_per_rub),
     }
 
