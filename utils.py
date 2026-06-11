@@ -73,39 +73,48 @@ def build_calculation(
     else:
         effective_weight = 0.0
 
-    # Add 3% to original cost in CNY as requested
-    cost_cny_with_fee = cost_cny * 1.03
+    # Шаг 1: Скрытый буфер
+    base_price = cost_cny * 1.03
 
-    # Округляем в пользу мерчанта (ceil)
-    goods_rub = math.ceil(cost_cny_with_fee * cny)
+    # Шаг 2: Прогрессивная комиссия (в юанях)
+    if base_price <= 1000:
+        total_cny = base_price * 1.05
+        pct = 5.0
+    else:
+        total_cny = (1000 * 1.05) + ((base_price - 1000) * 1.07)
+        pct = 7.0  # Для отображения (хотя по факту смешанная 5-7%)
+
+    # Вычленяем суммы для чека
+    goods_rub = base_price * cny
+    commission_rub = (total_cny - base_price) * cny
+
+    # Шаг 3: Конвертация и Фиксированный сбор (tech_fee = 500 по ТЗ)
+    price_rub = (total_cny * cny) + tech_fee
+
+    # Шаг 4: Аванс за доставку
+    # Считаем доставку: вес * тариф ($5/кг) * курс доллара
+    del_usd = effective_weight * usd_per_kg
+    shipping_rub = del_usd * usd
     
-    # Порог комиссии проверяем по ИСХОДНОЙ сумме до наценки 3%
-    pct = commission_percent(cost_cny, threshold)
-    commission_rub = math.ceil(goods_rub * pct / 100)
-    
-    del_usd = delivery_usd(effective_weight, min_kg, usd_per_kg)
-    delivery_rub = math.ceil(del_usd * usd)
+    final_price_rub = price_rub + shipping_rub
 
-    # Итог: товар + комиссия + логистика + сбор
-    subtotal_rub = goods_rub + commission_rub + delivery_rub + math.ceil(tech_fee)
-
-    # Вычитаем скидку (баланс пользователя), не уходя в минус
-    applied_discount = min(discount, subtotal_rub) if discount > 0 else 0.0
-    total_rub = math.ceil(subtotal_rub - applied_discount)
+    # Шаг 5: Применение скидки клиента
+    applied_discount = min(discount, final_price_rub) if discount > 0 else 0.0
+    total_rub = max(0.0, final_price_rub - applied_discount)
 
     return {
         "cny_rate": cny,
         "usd_rate": usd,
-        "goods_rub": float(goods_rub),
+        "goods_rub": round(goods_rub, 2),
         "commission_pct": pct,
-        "commission_rub": float(commission_rub),
-        "delivery_usd": del_usd,
-        "delivery_rub": float(delivery_rub),
+        "commission_rub": round(commission_rub, 2),
+        "delivery_usd": round(del_usd, 2),
+        "delivery_rub": round(shipping_rub, 2),
         "estimated_weight": effective_weight,
-        "subtotal_rub": float(subtotal_rub),
-        "discount_applied": float(applied_discount),
-        "total_rub": float(total_rub),
-        "total_kzt": math.ceil(total_rub * kzt_per_rub),
+        "subtotal_rub": round(final_price_rub, 2),
+        "discount_applied": round(applied_discount, 2),
+        "total_rub": round(total_rub, 2),
+        "total_kzt": round(total_rub * kzt_per_rub, 2),
     }
 
 
