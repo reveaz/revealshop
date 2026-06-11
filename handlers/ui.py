@@ -61,7 +61,10 @@ async def edit_screen(
         # If content hasn't changed or other error, just ignore
         logging.debug(f"Edit screen ignored/failed: {e}")
     finally:
-        await callback.answer()
+        try:
+            await callback.answer()
+        except Exception:
+            pass
 
 
 async def edit_home(callback: CallbackQuery, state: FSMContext) -> None:

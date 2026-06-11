@@ -81,11 +81,17 @@ async def handle_nav(callback: CallbackQuery, state: FSMContext) -> None:
 
     if action == "home":
         await edit_home(callback, state)
-        await callback.answer()
+        try:
+            await callback.answer()
+        except Exception:
+            pass
         return
 
     if action == "order":
-        await callback.answer()
+        try:
+            await callback.answer()
+        except Exception:
+            pass
         await show_order_guide(callback.message, state)
         return
 
