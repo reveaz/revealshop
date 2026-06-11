@@ -146,6 +146,19 @@ async def cb_staff_panel(callback: CallbackQuery, state: FSMContext) -> None:
     await callback.answer()
 
 
+@router.callback_query(F.data == "staff:restart")
+async def cb_staff_restart(callback: CallbackQuery) -> None:
+    if not is_admin(callback.from_user.id):
+        await callback.answer("Нет доступа", show_alert=True)
+        return
+    await callback.message.edit_text(
+        "🔄 Перезапускаю бота...\n\n<i>Он включится сам через 5 секунд благодаря start.bat</i>"
+    )
+    await callback.answer()
+    import os
+    os._exit(0)
+
+
 @router.callback_query(F.data == "staff:orders")
 async def cb_staff_orders(callback: CallbackQuery) -> None:
     if not is_admin(callback.from_user.id):

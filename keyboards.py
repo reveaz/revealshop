@@ -209,7 +209,8 @@ def staff_panel_inline() -> InlineKeyboardMarkup:
     b.button(text="📢 Рассылка", callback_data="staff:broadcast")
     b.button(text="💱 Курсы", callback_data="staff:rates")
     b.button(text="📊 Стат.", callback_data="staff:stats")
-    b.adjust(2)
+    b.button(text="🔄 Рестарт", callback_data="staff:restart")
+    b.adjust(2, 2, 1)
     b.row(*_home_row())
     return b.as_markup()
 
