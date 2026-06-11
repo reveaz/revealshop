@@ -115,6 +115,7 @@ def build_calculation(
         "discount_applied": round(applied_discount, 2),
         "total_rub": round(total_rub, 2),
         "total_kzt": round(total_rub * kzt_per_rub, 2),
+        "tech_fee": round(tech_fee, 2),
     }
 
 
@@ -124,13 +125,14 @@ def fmt_money(value: float) -> str:
 
 def fmt_calc_result_body(data: dict) -> str:
     if data['delivery_usd'] > 0:
-        del_line = f"├ доставка … {data['delivery_usd']}$ ({fmt_money(data['delivery_rub'])})"
+        del_line = f"├ доставка (аванс) … {data['delivery_usd']}$ ({fmt_money(data['delivery_rub'])})"
     else:
         del_line = "├ доставка … точная сумма после взвешивания"
 
     lines = [
         f"├ товар …… {fmt_money(data['goods_rub'])}",
-        f"├ комиссия {data['commission_pct']:.0f}% … {fmt_money(data['commission_rub'])}",
+        f"├ комиссия сервиса … {fmt_money(data['commission_rub'])}",
+        f"├ таможенный сбор … {fmt_money(data['tech_fee'])}",
         del_line,
         f"└ <b>итого … {fmt_money(data['total_rub'])}</b>  ·  {data['total_kzt']:,} ₸".replace(",", " ")
     ]
