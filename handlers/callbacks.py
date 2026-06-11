@@ -238,21 +238,33 @@ async def cb_staff_status(callback: CallbackQuery) -> None:
             kwargs["cny_rate"] = config.CNY_RATE
             kwargs["usd_rate"] = config.USD_RATE
             kwargs["kzt_per_rub"] = config.KZT_PER_RUB
-            calc = build_calculation(cost_cny, weight, **kwargs)
+            
+            cargo = row["cargo_type"] if row["cargo_type"] else "Товар (международная доставка)"
+            user_discount = await db.get_discount(row["user_id"])
+
+            calc = build_calculation(
+                cost_cny, 
+                weight, 
+                category=cargo,
+                discount=user_discount,
+                **kwargs
+            )
 
             total_rub = calc["total_rub"]
 
             # ── Фискализация: детализированная номенклатура (ФНС 2026) ──
-            cargo = row["cargo_type"] if row["cargo_type"] else "Товар (международная доставка)"
             item_name = f"{cargo}, зак. #{order_id}"
+
+            items = [
+                ReceiptItem(name=item_name, quantity=1, sum=float(calc["goods_rub"] + calc["commission_rub"])),
+                ReceiptItem(name="Логистические услуги (аванс)", quantity=1, sum=float(calc["delivery_rub"] + config.LOGISTICS_FEE_RUB - calc["discount_applied"])),
+            ]
 
             invoice = robokassa_payment_url(
                 inv_id=order_id,
                 out_sum=float(total_rub),
                 description=f"Заказ #{order_id} — RevealLorder",
-                items=[
-                    ReceiptItem(name=item_name, quantity=1, sum=float(total_rub)),
-                ],
+                items=items,
             )
 
             if invoice:
@@ -262,6 +274,9 @@ async def cb_staff_status(callback: CallbackQuery) -> None:
                     amount=float(total_rub),
                     currency="RUB",
                 )
+                
+                if user_discount > 0:
+                    await db.reset_discount(row["user_id"])
 
                 pay_kb = InlineKeyboardMarkup(inline_keyboard=[
                     [InlineKeyboardButton(

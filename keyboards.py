@@ -18,7 +18,7 @@ BTN_CANCEL = "❌ Отмена"
 CANCEL_TEXTS = {BTN_CANCEL, "Отмена", "❌ Отмена", "/cancel"}
 
 LEGACY_TO_NAV = {
-    "🛒 Сделать заказ": "nav:order",
+    "🔗 Выкуп по ссылке (Pro)": "nav:order",
     "📋 Мои заказы": "nav:orders",
     "🧮 Калькулятор": "nav:calc",
     "💱 Актуальный курс": "nav:rate",
@@ -47,7 +47,8 @@ def nav_footer_inline(back_data: str = "staff:panel") -> InlineKeyboardMarkup:
 
 def main_menu_inline() -> InlineKeyboardMarkup:
     b = InlineKeyboardBuilder()
-    b.button(text="🛒 Сделать заказ", callback_data="nav:order")
+    b.button(text="🔥 Каталог хитов", callback_data="nav:catalog")
+    b.button(text="🔗 Выкуп по ссылке (Pro)", callback_data="nav:order")
     b.button(text="📋 Мои заказы", callback_data="nav:orders")
     b.button(text="🧮 Калькулятор", callback_data="nav:calc")
     b.button(text="📈 Актуальный курс", callback_data="nav:rate")
@@ -56,7 +57,7 @@ def main_menu_inline() -> InlineKeyboardMarkup:
     b.button(text="📰 Новости", callback_data="nav:news")
     b.button(text="📢 Уведомления", callback_data="nav:notify")
     b.button(text="⚙️ Настройки", callback_data="nav:settings")
-    b.adjust(2, 2, 2, 2, 1)
+    b.adjust(1, 2, 2, 2, 2, 1)
     return b.as_markup()
 
 
@@ -114,7 +115,7 @@ def orders_list_inline(orders: list) -> InlineKeyboardMarkup:
             callback_data=f"order:view:{row['id']}",
         )
     b.adjust(1)
-    b.row(InlineKeyboardButton(text="🛒 Новый заказ", callback_data="nav:order"))
+    b.row(InlineKeyboardButton(text="🔗 Выкуп по ссылке", callback_data="nav:order"))
     b.row(InlineKeyboardButton(text="🏠 Меню", callback_data=CB_HOME))
     return b.as_markup()
 
@@ -184,7 +185,7 @@ def delivery_inline() -> InlineKeyboardMarkup:
 def calc_result_inline() -> InlineKeyboardMarkup:
     b = InlineKeyboardBuilder()
     b.button(text="🧮 Новый расчет", callback_data="nav:calc")
-    b.button(text="🛒 Оформить заказ", callback_data="nav:order")
+    b.button(text="🔗 Заказать по ссылке", callback_data="nav:order")
     b.adjust(1)
     b.row(*_home_row())
     return b.as_markup()

@@ -89,6 +89,12 @@ async def handle_nav(callback: CallbackQuery, state: FSMContext) -> None:
         await show_order_guide(callback.message, state)
         return
 
+    if action == "catalog":
+        from texts import catalog_stub
+        from keyboards import more_menu_inline
+        await show_panel(callback, catalog_stub(), more_menu_inline())
+        return
+
     if action == "orders":
         await _orders_screen_cb(callback, state)
         return

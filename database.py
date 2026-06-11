@@ -100,6 +100,7 @@ async def init_db() -> None:
                 full_name TEXT,
                 notify_orders INTEGER NOT NULL DEFAULT 1,
                 onboarding_done INTEGER NOT NULL DEFAULT 0,
+                balance_discount REAL NOT NULL DEFAULT 0,
                 created_at TEXT NOT NULL DEFAULT (datetime('now'))
             )
             """
@@ -140,6 +141,10 @@ async def _migrate(db: aiosqlite.Connection) -> None:
     if user_cols and "onboarding_done" not in user_cols:
         await db.execute(
             "ALTER TABLE users ADD COLUMN onboarding_done INTEGER NOT NULL DEFAULT 0"
+        )
+    if user_cols and "balance_discount" not in user_cols:
+        await db.execute(
+            "ALTER TABLE users ADD COLUMN balance_discount REAL NOT NULL DEFAULT 0"
         )
 
     cursor = await db.execute("PRAGMA table_info(orders)")
@@ -230,6 +235,31 @@ async def set_onboarding_done(user_id: int, done: bool = True) -> None:
         await db.execute(
             "UPDATE users SET onboarding_done = ? WHERE user_id = ?",
             (1 if done else 0, user_id),
+        )
+        await db.commit()
+
+
+async def add_discount(user_id: int, amount: float) -> None:
+    async with aiosqlite.connect(DB_PATH) as db:
+        await db.execute(
+            "UPDATE users SET balance_discount = balance_discount + ? WHERE user_id = ?",
+            (amount, user_id),
+        )
+        await db.commit()
+
+
+async def get_discount(user_id: int) -> float:
+    async with aiosqlite.connect(DB_PATH) as db:
+        cursor = await db.execute("SELECT balance_discount FROM users WHERE user_id = ?", (user_id,))
+        row = await cursor.fetchone()
+        return row[0] if row else 0.0
+
+
+async def reset_discount(user_id: int) -> None:
+    async with aiosqlite.connect(DB_PATH) as db:
+        await db.execute(
+            "UPDATE users SET balance_discount = 0 WHERE user_id = ?",
+            (user_id,),
         )
         await db.commit()
 

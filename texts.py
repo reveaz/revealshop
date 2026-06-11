@@ -65,6 +65,10 @@ def about_service() -> str:
         f"Курс ЦБ · доставка <b>{config.DELIVERY_USD_PER_KG:.0f}$/кг</b>\n"
         f"Лог. сбор <b>{int(config.LOGISTICS_FEE_RUB)} ₽</b>\n"
         f"Срок 9–15 дней до Астаны · бот 24/7\n\n"
+        f"<b>Юридическая информация</b>\n"
+        f"ИП Фамилия Имя Отчество\n"
+        f"ИИН: 000000000000\n"
+        f"Юр. адрес: г. Астана, ул. …\n\n"
         f"Использование бота означает согласие с {url_link('Пользовательским соглашением', config.TERMS_URL)}."
     )
 
@@ -80,7 +84,13 @@ def delivery_info() -> str:
 
 
 def contacts_text() -> str:
-    return f"{DOT} <b>Контакты</b>\n{SEP}"
+    return (
+        f"{DOT} <b>Контакты</b>\n{SEP}\n\n"
+        f"<b>ИП Фамилия Имя Отчество</b>\n"
+        f"ИИН: 000000000000\n"
+        f"Юр. адрес: г. Астана, ул. …\n"
+        f"E-mail: info@revealshop.kz"
+    )
 
 
 def support_text() -> str:
@@ -151,3 +161,13 @@ def admin_header(users: int, pending: int) -> str:
 
 def more_menu_title() -> str:
     return screen("Ещё", "Ссылки · настройки · поддержка")
+
+
+def catalog_stub() -> str:
+    return screen(
+        "🔥 Каталог хитов",
+        "Раздел в разработке\n\n"
+        "Здесь скоро появятся готовые карточки товаров\n"
+        "с фото, описанием и финальной ценой \"под ключ\".\n\n"
+        "Следите за обновлениями в нашем канале 👇",
+    )

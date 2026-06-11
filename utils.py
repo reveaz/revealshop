@@ -25,6 +25,12 @@ def commission_percent(cost_cny: float, threshold_cny: float) -> float:
     return 5.0 if cost_cny < threshold_cny else 7.0
 
 
+def estimate_weight(category: str) -> float:
+    """Возвращает примерный вес (кг) по категории из справочника."""
+    import config
+    return config.CATEGORY_WEIGHTS.get(category.lower().strip(), config.CATEGORY_WEIGHTS["другое"])
+
+
 def delivery_usd(weight_kg: float, min_kg: float, usd_per_kg: float) -> float:
     if weight_kg <= 0:
         return 0.0
@@ -33,8 +39,10 @@ def delivery_usd(weight_kg: float, min_kg: float, usd_per_kg: float) -> float:
 
 def build_calculation(
     cost_cny: float,
-    weight_kg: float,
+    weight_kg: float = 0.0,
     *,
+    category: str = "",
+    discount: float = 0.0,
     cny_rate: float | None = None,
     usd_rate: float | None = None,
     threshold: float,
@@ -43,24 +51,44 @@ def build_calculation(
     usd_per_kg: float,
     kzt_per_rub: float,
 ) -> dict:
+    """Расчёт стоимости заказа.
+
+    Если передан `category` и `weight_kg == 0`, вес берётся из справочника
+    CATEGORY_WEIGHTS (модель «единый чекаут»). Если передан `weight_kg > 0`,
+    используется точное значение (обратная совместимость с калькулятором).
+
+    `discount` — баланс скидок пользователя (вычитается из итога).
+    """
     import config
+    import math
+
     cny = cny_rate if cny_rate is not None else config.CNY_RATE
     usd = usd_rate if usd_rate is not None else config.USD_RATE
-    
+
+    # Определяем вес: точный или из справочника
+    if weight_kg > 0:
+        effective_weight = weight_kg
+    elif category:
+        effective_weight = estimate_weight(category)
+    else:
+        effective_weight = 0.0
+
     # Add 3% to original cost in CNY as requested
     cost_cny_with_fee = cost_cny * 1.03
-    
+
     goods_rub = round(cost_cny_with_fee * cny, 2)
     pct = commission_percent(cost_cny_with_fee, threshold)
     commission_rub = round(goods_rub * pct / 100, 2)
-    del_usd = delivery_usd(weight_kg, min_kg, usd_per_kg)
+    del_usd = delivery_usd(effective_weight, min_kg, usd_per_kg)
     delivery_rub = round(del_usd * usd, 2)
-    
-    import math
 
-    # Calculate everything together including log fee, but it won't be shown as a separate line
-    total_rub = math.ceil(goods_rub + commission_rub + delivery_rub + tech_fee)
-    
+    # Итог: товар + комиссия + логистика + сбор
+    subtotal_rub = math.ceil(goods_rub + commission_rub + delivery_rub + tech_fee)
+
+    # Вычитаем скидку (баланс пользователя), не уходя в минус
+    applied_discount = min(discount, subtotal_rub) if discount > 0 else 0.0
+    total_rub = math.ceil(subtotal_rub - applied_discount)
+
     return {
         "cny_rate": cny,
         "usd_rate": usd,
@@ -69,6 +97,9 @@ def build_calculation(
         "commission_rub": commission_rub,
         "delivery_usd": del_usd,
         "delivery_rub": delivery_rub,
+        "estimated_weight": effective_weight,
+        "subtotal_rub": subtotal_rub,
+        "discount_applied": applied_discount,
         "total_rub": total_rub,
         "total_kzt": math.ceil(total_rub * kzt_per_rub),
     }

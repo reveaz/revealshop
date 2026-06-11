@@ -26,6 +26,16 @@ TERMS_URL = os.getenv("TERMS_URL", "https://telegra.ph/Polzovatelskoe-soglasheni
 MAX_LINKS_PER_ORDER = 10
 TRACK17_API_KEY = os.getenv("TRACK17_API_KEY", "")
 
+# Справочник средних весов по категориям (кг) — для «единого чекаута»
+CATEGORY_WEIGHTS = {
+    "обувь": 1.2,
+    "одежда": 0.5,
+    "электроника": 0.6,
+    "сумки": 0.8,
+    "аксессуары": 0.3,
+    "другое": 1.0,
+}
+
 # Robokassa payment gateway
 ROBOKASSA_LOGIN = os.getenv("ROBOKASSA_LOGIN", "")
 ROBOKASSA_PASSWORD1 = os.getenv("ROBOKASSA_PASSWORD1", "")      # подпись при создании платежа
