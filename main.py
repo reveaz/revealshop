@@ -48,8 +48,8 @@ async def main() -> None:
     asyncio.create_task(auto_track_loop(bot))
     logger.info("Авто-трекинг запущен")
 
-    # Start Prodamus webhook server (if configured)
-    if config.PRODAMUS_API_KEY:
+    # Start Robokassa webhook server (if configured)
+    if config.ROBOKASSA_LOGIN:
         from aiohttp import web
         from handlers.webhook import create_webhook_app, set_bot
 
@@ -59,9 +59,9 @@ async def main() -> None:
         await runner.setup()
         site = web.TCPSite(runner, "0.0.0.0", config.WEBHOOK_PORT)
         await site.start()
-        logger.info("Prodamus webhook слушает на порту %s", config.WEBHOOK_PORT)
+        logger.info("Robokassa ResultURL webhook слушает на порту %s", config.WEBHOOK_PORT)
     else:
-        logger.info("PRODAMUS_API_KEY не задан — webhook-сервер не запущен")
+        logger.info("ROBOKASSA_LOGIN не задан — webhook-сервер не запущен")
 
     await dp.start_polling(bot)
 

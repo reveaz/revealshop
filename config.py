@@ -26,10 +26,14 @@ TERMS_URL = os.getenv("TERMS_URL", "https://telegra.ph/Polzovatelskoe-soglasheni
 MAX_LINKS_PER_ORDER = 10
 TRACK17_API_KEY = os.getenv("TRACK17_API_KEY", "")
 
-# Prodamus payment gateway
-PRODAMUS_API_URL = os.getenv("PRODAMUS_API_URL", "")   # e.g. https://yourshop.payform.ru
-PRODAMUS_API_KEY = os.getenv("PRODAMUS_API_KEY", "")   # secret key
-WEBHOOK_HOST = os.getenv("WEBHOOK_HOST", "")           # e.g. https://yourdomain.com
+# Robokassa payment gateway
+ROBOKASSA_LOGIN = os.getenv("ROBOKASSA_LOGIN", "")
+ROBOKASSA_PASSWORD1 = os.getenv("ROBOKASSA_PASSWORD1", "")      # подпись при создании платежа
+ROBOKASSA_PASSWORD2 = os.getenv("ROBOKASSA_PASSWORD2", "")      # проверка ResultURL
+ROBOKASSA_IS_TEST = os.getenv("ROBOKASSA_IS_TEST", "1") == "1"  # тестовый режим
+ROBOKASSA_HASH_ALGO = os.getenv("ROBOKASSA_HASH_ALGO", "md5")   # md5 | sha256
+ROBOKASSA_SNO = os.getenv("ROBOKASSA_SNO", "usn_income")        # система налогообложения
+WEBHOOK_HOST = os.getenv("WEBHOOK_HOST", "")
 WEBHOOK_PORT = int(os.getenv("WEBHOOK_PORT", "8080"))
 
 # Banners

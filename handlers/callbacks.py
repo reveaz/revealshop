@@ -218,12 +218,15 @@ async def cb_staff_status(callback: CallbackQuery) -> None:
 
     user = await db.get_user(row["user_id"])
 
-    # ── Перехват: "Ожидает оплаты" → генерация инвойса Prodamus ──
+    # ── Перехват: "Ожидает оплаты" → генерация ссылки Robokassa ──
     if status == "Ожидает оплаты" and user and user["notify_orders"]:
         try:
             from handlers.common import calc_kwargs
-            from utils import build_calculation
-            from services.prodamus import prodamus_create_invoice
+            from utils import build_calculation, fmt_money
+            from services.robokassa import (
+                robokassa_payment_url,
+                ReceiptItem,
+            )
             from aiogram.types import InlineKeyboardMarkup, InlineKeyboardButton
 
             import config
@@ -237,25 +240,28 @@ async def cb_staff_status(callback: CallbackQuery) -> None:
             kwargs["kzt_per_rub"] = config.KZT_PER_RUB
             calc = build_calculation(cost_cny, weight, **kwargs)
 
-            total_kzt = calc["total_kzt"]
             total_rub = calc["total_rub"]
 
-            invoice = await prodamus_create_invoice(
-                order_id=order_id,
-                amount=total_kzt,
-                currency="KZT",
+            # ── Фискализация: детализированная номенклатура (ФНС 2026) ──
+            cargo = row["cargo_type"] if row["cargo_type"] else "Товар (международная доставка)"
+            item_name = f"{cargo}, зак. #{order_id}"
+
+            invoice = robokassa_payment_url(
+                inv_id=order_id,
+                out_sum=float(total_rub),
                 description=f"Заказ #{order_id} — RevealLorder",
+                items=[
+                    ReceiptItem(name=item_name, quantity=1, sum=float(total_rub)),
+                ],
             )
 
             if invoice:
                 await db.record_payment(
-                    payment_id=invoice.payment_id,
+                    payment_id=str(order_id),
                     order_id=order_id,
-                    amount=total_kzt,
-                    currency="KZT",
+                    amount=float(total_rub),
+                    currency="RUB",
                 )
-
-                from utils import fmt_money
 
                 pay_kb = InlineKeyboardMarkup(inline_keyboard=[
                     [InlineKeyboardButton(
@@ -266,12 +272,12 @@ async def cb_staff_status(callback: CallbackQuery) -> None:
                 await callback.bot.send_message(
                     row["user_id"],
                     f"📦 <b>Заказ #{order_id}</b> — ожидает оплаты\n\n"
-                    f"💰 Сумма: <b>{fmt_money(total_rub)}</b>  ·  {total_kzt:,} ₸\n\n"
-                    f"Нажмите кнопку ниже для оплаты 👇".replace(",", " "),
+                    f"💰 Сумма: <b>{fmt_money(total_rub)}</b>\n\n"
+                    f"Нажмите кнопку ниже для оплаты 👇",
                     reply_markup=pay_kb,
                 )
             else:
-                # Prodamus недоступен — отправляем обычное уведомление
+                # Robokassa не настроена — обычное уведомление
                 await callback.bot.send_message(
                     row["user_id"],
                     f"📦 <b>#{order_id}</b> → {status}\n"
@@ -279,7 +285,7 @@ async def cb_staff_status(callback: CallbackQuery) -> None:
                 )
         except Exception as e:
             import logging
-            logging.getLogger(__name__).error("Payment invoice error: %s", e)
+            logging.getLogger(__name__).error("Robokassa invoice error: %s", e)
             try:
                 await callback.bot.send_message(
                     row["user_id"],
