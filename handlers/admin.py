@@ -42,6 +42,8 @@ async def cmd_admin(message: Message) -> None:
     await message.answer(
         admin_header(users, pending),
         reply_markup=staff_panel_inline(),
+    )
+
 @router.message(Command("staff"))
 async def cmd_staff(message: Message, state: FSMContext) -> None:
     if not is_admin(message.from_user.id if message.from_user else None):
